@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "armie"
+version = "0.1.0"
+description = "Voice-commanded SO-101 handover assistant"
+requires-python = ">=3.12"
+# LeRobot is installed separately as an editable clone (see README Setup).
+dependencies = [
+    "mujoco>=3.2",
+    "numpy",
+    "pyyaml",
+]
+
+[tool.setuptools.packages.find]
+include = ["assistant*", "calibration*", "sim*"]

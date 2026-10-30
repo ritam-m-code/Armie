@@ -1,0 +1,15 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.DS_Store
+
+# Per-setup config; commit only example.yaml
+config/*.yaml
+!config/example.yaml
+
+# Generated data and checkpoints
+data/
+outputs/
+checkpoints/
+*.mp4

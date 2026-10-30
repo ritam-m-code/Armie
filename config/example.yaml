@@ -1,0 +1,26 @@
+# Copy to config/<your-setup>.yaml and edit. Units are SI (m, rad, s) unless noted.
+# Frames are named T_<to>_<from>; see docs/frames.md.
+
+robot:
+  type: so101_follower
+  port: /dev/cu.usbmodem5B3D0412631   # from lerobot-find-port
+  id: armie_follower                  # calibration file name under ~/.cache/huggingface/lerobot/calibration
+
+cameras:
+  front: {index: 0, width: 640, height: 480, fps: 30}   # TODO(verify) indices
+  wrist: {index: 1, width: 640, height: 480, fps: 30}
+
+stereo:
+  left_index: 2    # TODO(verify)
+  right_index: 3   # TODO(verify)
+  calibration_path: calibration/stereo.npz
+
+transforms:
+  T_base_cam_path: calibration/T_base_cam.npy
+
+objects: []        # fixed pick list; decide before recording demos
+
+safety:
+  max_approach_speed: 0.10   # m/s, TODO(verify)
+  workspace_max_z: 0.40      # m above base, TODO(verify) against shoulder height
+  hand_lost_timeout: 0.5     # s

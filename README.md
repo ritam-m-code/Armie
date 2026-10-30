@@ -2,7 +2,7 @@
 
 > "Hand me the red marker." — the arm finds it, picks it up, tracks your hand in 3D, and places it in your palm.
 
-A voice-commanded robotic assistant built on a self-assembled [SO-101](https://github.com/TheRobotStudio/SO-ARM100) arm. It combines a **fine-tuned vision-language-action policy** for grasping with **classical stereo hand tracking and inverse kinematics** for human handover.
+A voice-commanded robotic assistant built on a self-assembled [SO-101](https://github.com/TheRobotStudio/SO-ARM100) arm. It combines a **vision-language-action policy fine-tuned on MuJoCo sim demos plus a small set of real demos** for grasping with **classical stereo hand tracking and inverse kinematics** for human handover.
 
 **Status:** 🚧 In development — see [Roadmap](#roadmap). Results below are filled in as milestones land.
 
@@ -29,6 +29,7 @@ flowchart LR
 |---|---|---|
 | Speech → task | STT + LLM tool call constrained to a fixed object list | Prevents requests the policy wasn't trained for |
 | Pick | **SmolVLA** (450M-param VLA, fine-tuned from `lerobot/smolvla_base`); **ACT** as baseline | Learned policies handle varied object poses well |
+| Pick data | Scripted-expert demos in MuJoCo (domain-randomized) + ~20 real gamepad-teleop demos per object | No leader arm; sim gives unlimited demos, real demos close the sim-to-real gap |
 | Handover | **Classical**: 3D hand keypoint → `T_base_cam` → IK → velocity-capped approach | Hand position varies continuously; classical control is safer and predictable near a person |
 | Release | Gripper load change when the user pulls | No extra sensors |
 | Orchestration | State machine: `IDLE → LISTEN → PLAN → PICK → CHECK → PRESENT → RELEASE → HOME` | Every state has a timeout and a safe fallback |
@@ -42,9 +43,10 @@ flowchart LR
 | Component | Details |
 |---|---|
 | Follower arm | SO-101, 6× Feetech STS3215 (1/345), 5-DOF + gripper |
-| Leader arm | SO-101 leader (mixed gear ratios) for teleoperated data collection |
+| Teleop | Gamepad end-effector control of the follower (no leader arm) for real demos |
 | Policy cameras | 2× RGB USB webcams — fixed front view + wrist-mounted |
 | Hand tracking | Stereo camera pair, YOLOv8-pose + triangulation |
+| Simulation | MuJoCo scene of the SO-101 with matched front + wrist cameras |
 | Compute | GPU machine for policy inference; cloud GPU for training |
 | Safety | Inline hardware kill switch on servo power |
 
@@ -56,16 +58,17 @@ _To be filled in with measured numbers. Format:_
 
 | Metric | Value | Trials |
 |---|---|---|
-| Pick success — SmolVLA | TBD | n = 20 |
-| Pick success — ACT | TBD | n = 20 |
+| Pick success in sim — SmolVLA / ACT | TBD | n = 200 |
+| Pick success on hardware, sim-only data — SmolVLA / ACT | TBD | n = 20 |
+| Pick success on hardware, sim + real data — SmolVLA / ACT | TBD | n = 20 |
 | Handover success | TBD | n = 20 |
 | End-to-end success (voice → handover) | TBD | n = 20 |
 | Median command-to-handover latency | TBD | — |
 | Camera→robot calibration error (RMS) | TBD | — |
 
-**Data scaling (SmolVLA pick success):**
+**Data scaling (SmolVLA pick success in sim):**
 
-| Demos per object | 25 | 50 | 100 |
+| Sim demos per object | 25 | 50 | 100 |
 |---|---|---|---|
 | Success | TBD | TBD | TBD |
 
@@ -80,6 +83,7 @@ cd <this-repo>
 # LeRobot with Feetech + SmolVLA support (see LeRobot installation guide)
 pip install -e ".[feetech]"
 pip install -e ".[smolvla]"
+pip install mujoco
 ```
 
 Arm bring-up follows the [LeRobot SO-101 guide](https://huggingface.co/docs/lerobot/so101):
@@ -99,7 +103,10 @@ Project configuration (ports, camera indices, calibration paths, thresholds) liv
 <!-- Fill in once entry points exist -->
 
 ```bash
-# Record demonstrations (per object)
+# Generate scripted sim demonstrations (per object)
+python -m sim.generate_demos ...
+
+# Record real demonstrations via gamepad teleop (per object)
 lerobot-record ... --dataset.single_task="pick up the red marker"
 
 # Train
@@ -128,11 +135,11 @@ Do not run handover without the kill switch within reach.
 ## Roadmap
 
 - [ ] **M0** Follower bring-up and calibration
-- [ ] **M1** Leader arm build, teleoperation with cameras
-- [ ] **M2** SmolVLA + ACT pick a named object
+- [ ] **M1** MuJoCo sim: SO-101 scene, matched cameras, IK + scripted expert, domain randomization; real gamepad demos
+- [ ] **M2** SmolVLA + ACT pick a named object (sim-only vs sim + real data)
 - [ ] **M3** Classical handover to tracked hand
 - [ ] **M4** Full voice → pick → handover loop
-- [ ] **M5** Evaluation: SmolVLA vs ACT, data scaling, end-to-end metrics
+- [ ] **M5** Evaluation: SmolVLA vs ACT, sim-to-real gap, data scaling, end-to-end metrics
 
 ---
 
@@ -144,6 +151,7 @@ calibration/     camera intrinsics, stereo, camera→robot
 config/          per-setup configuration
 docs/            frames.md, design notes, media
 scripts/         data collection and evaluation helpers
+sim/             MuJoCo scene, scripted expert, domain randomization, demo generation
 ```
 
 ---
@@ -152,6 +160,7 @@ scripts/         data collection and evaluation helpers
 
 - [LeRobot](https://github.com/huggingface/lerobot) — robot drivers, data collection, training, and rollout tooling
 - [SmolVLA](https://huggingface.co/docs/lerobot/smolvla) — pretrained vision-language-action base model
+- [MuJoCo](https://mujoco.org) — physics simulation for demo generation and evaluation
 - [SO-ARM100 / SO-101](https://github.com/TheRobotStudio/SO-ARM100) — open-source arm design by TheRobotStudio
 - ACT (Action Chunking with Transformers) — baseline policy
 

@@ -83,7 +83,7 @@ cd <this-repo>
 # LeRobot with Feetech + SmolVLA support (see LeRobot installation guide)
 pip install -e ".[feetech]"
 pip install -e ".[smolvla]"
-pip install mujoco
+pip install -e .   # this repo: MuJoCo, numpy, pyyaml
 ```
 
 Arm bring-up follows the [LeRobot SO-101 guide](https://huggingface.co/docs/lerobot/so101):
@@ -103,6 +103,10 @@ Project configuration (ports, camera indices, calibration paths, thresholds) liv
 <!-- Fill in once entry points exist -->
 
 ```bash
+# Inspect the sim scene (macOS needs mjpython for the viewer)
+mjpython -m mujoco.viewer --mjcf=sim/assets/scene.xml
+python scripts/sim_snapshot.py   # renders front + wrist cameras to outputs/snapshots
+
 # Generate scripted sim demonstrations (per object)
 python -m sim.generate_demos ...
 

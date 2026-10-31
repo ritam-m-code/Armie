@@ -4,7 +4,7 @@
 robot:
   type: so101_follower
   port: /dev/cu.usbmodem5B3D0412631   # from lerobot-find-port
-  id: armie_follower                  # calibration file name under ~/.cache/huggingface/lerobot/calibration
+  id: follower                        # ~/.cache/huggingface/lerobot/calibration/robots/so_follower/follower.json
 
 cameras:
   front: {index: 0, width: 640, height: 480, fps: 30}   # TODO(verify) indices
@@ -24,3 +24,14 @@ safety:
   max_approach_speed: 0.10   # m/s, TODO(verify)
   workspace_max_z: 0.40      # m above base, TODO(verify) against shoulder height
   hand_lost_timeout: 0.5     # s
+
+# Real (LeRobot calibrated: body joints in deg, gripper 0-100) <-> sim (rad). sim_deg = real_deg - offset.
+# Offsets measured 2026-10-30 in the straight-out pose; all directions checked to match (no sign flips).
+sim_map:
+  offsets_deg:
+    shoulder_pan: -16.7
+    shoulder_lift: 11.6
+    elbow_flex: -17.3
+    wrist_flex: 22.05
+    wrist_roll: -87.6
+  gripper_sim_deg: [-10.0, 116.0]   # sim angle at real 0 (closed) and real 100 (open)

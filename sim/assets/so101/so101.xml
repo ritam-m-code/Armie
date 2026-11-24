@@ -4,7 +4,8 @@
 <!-- Derived from so101_new_calib.xml: adds wrist camera mount + wrist camera (Hex-Nut 32x32 UVC module form factor) -->
 <!-- Vendored from TheRobotStudio/SO-ARM100 @ a758567 (Apache-2.0, see LICENSE): Simulation/SO101/so101_new_calib_camera.xml.
      Local changes: added <camera name="wrist"> inside the wrist_camera body; meshdir is relative to sim/assets/scene.xml;
-     joint ranges/ctrlranges widened to the real follower's calibrated ranges mapped through sim/joint_map.py (2026-10-30). -->
+     joint ranges/ctrlranges widened to the real follower's calibrated ranges mapped through sim/joint_map.py (2026-10-30);
+     arm self-collision disabled via the collision class; fixed-jaw collision mesh replaced by boxes. -->
 <mujoco model="so101_new_calib_camera">
   <compiler angle="radian" meshdir="so101/assets" autolimits="true"/>
   <default>
@@ -15,7 +16,9 @@
         <geom type="mesh" contype="0" conaffinity="0" group="2"/>
       </default>
       <default class="collision">
-        <geom group="3"/>
+        <!-- contype 2 / conaffinity 1: arm links never collide with each other (convex hulls overlap at real
+             poses), but still collide with the table and objects (contype 1). -->
+        <geom group="3" contype="2" conaffinity="1"/>
       </default>
     </default>
   </default>
@@ -110,7 +113,10 @@
                 <geom type="mesh" class="collision" pos="0.0077 0.0001 -0.0234" quat="0.707107 -0.707107 1.66015e-15 6.45094e-15" mesh="sts3215_03a_v1" material="sts3215_03a_v1_material"/>
                 <!-- Part wrist_roll_follower_so101_v1 -->
                 <geom type="mesh" class="visual" pos="8.32667e-17 -0.000218214 0.000949706" quat="0 1 0 0" mesh="wrist_roll_follower_so101_v1" material="wrist_roll_follower_so101_v1_material"/>
-                <geom type="mesh" class="collision" pos="8.32667e-17 -0.000218214 0.000949706" quat="0 1 0 0" mesh="wrist_roll_follower_so101_v1" material="wrist_roll_follower_so101_v1_material"/>
+                <!-- Local change: the convex hull of this part filled the gap between the jaws, so its collision mesh is
+                     replaced by a fixed-finger pad and a palm box, fitted to the visual mesh in the gripperframe site frame. -->
+                <geom name="fixed_finger_pad" type="box" class="collision" pos="-0.0122 -0.0002 -0.0711" quat="0.707107 0 0.707107 0" size="0.0330 0.0070 0.0037"/>
+                <geom name="palm" type="box" class="collision" pos="-0.0014 -0.0002 -0.0076" quat="0.707107 0 0.707107 0" size="0.0085 0.0120 0.0145"/>
                 <!-- Frame gripperframe -->
                 <site group="3" name="gripperframe" pos="-0.0079 -0.000218121 -0.0981274" quat="0.707107 -0 0.707107 -2.37788e-17"/>
                 <!-- Link wrist_camera_mount (Hex-Nut Recess, 32x32 UVC module form factor) -->
